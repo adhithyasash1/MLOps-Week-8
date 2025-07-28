@@ -9,7 +9,7 @@ def main():
         print("Error: results.csv not found.")
         return
 
-    # Dynamically find and rename the correct column names
+    # Dynamically find and rename columns
     try:
         poison_col = next(col for col in df.columns if 'poison_rate' in col)
         acc_col = next(col for col in df.columns if 'best_model_accuracy' in col)
@@ -23,20 +23,24 @@ def main():
         acc_col: "accuracy",
         loss_col: "loss"
     }, inplace=True)
-
-    # ---- THIS IS THE FIX ----
-    # Convert metric columns to numeric, forcing errors to become 'Not a Number' (NaN)
+    
     df['accuracy'] = pd.to_numeric(df['accuracy'], errors='coerce')
     df['loss'] = pd.to_numeric(df['loss'], errors='coerce')
-
-    # Filter out rows that are not part of an experiment or have no metrics
+    
     df = df[df['Experiment'].notna()].dropna(subset=['accuracy', 'loss'])
     df = df.sort_values(by="poison_rate").reset_index(drop=True)
 
-    # Save baseline accuracy for the report badge
-    baseline_accuracy = df[df['poison_rate'] == 0.0]['accuracy'].iloc[0]
-    with open("baseline_acc.txt", "w") as f:
-        f.write(f"{baseline_accuracy:.3f}")
+    # ---- THIS IS THE FIX ----
+    # Save baseline accuracy for the report badge, with a check
+    baseline_df = df[df['poison_rate'] == 0.0]
+    if not baseline_df.empty:
+        baseline_accuracy = baseline_df['accuracy'].iloc[0]
+        with open("baseline_acc.txt", "w") as f:
+            f.write(f"{baseline_accuracy:.3f}")
+    else:
+        print("Warning: Baseline (poison_rate=0.0) experiment not found. Using 'N/A' for badge.")
+        with open("baseline_acc.txt", "w") as f:
+            f.write("N/A")
 
     # --- Create the Plot ---
     sns.set_theme(style="whitegrid")
@@ -52,7 +56,7 @@ def main():
     ax2.set_ylabel('Validation Loss')
     ax2.set_title('Loss increases as more data is poisoned')
     ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x*100)}%'))
-
+    
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.savefig("summary_plot.png")
     print("\nSaved summary plot to summary_plot.png")

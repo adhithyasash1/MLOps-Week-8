@@ -1,5 +1,5 @@
 {
-    "best_model_accuracy": 0.6666666666666666,
-    "best_model_loss": 0.770462351715986,
-    "best_model_f1": 0.6374181330387438
+    "best_model_accuracy": 0.8,
+    "best_model_loss": 0.9858892085453852,
+    "best_model_f1": 0.7963135549342445
 }

@@ -1,0 +1,27 @@
+stages:
+  train:
+    cmd: python train.py --poison-rate ${train.poison_rate}
+    deps:
+      - train.py
+      - data/iris.csv
+    params:
+      - train.poison_rate
+    outs:
+      - models/
+      - plots/
+      - reports/
+    metrics:
+      - dvclive/metrics.json:
+          cache: false
+    plots:
+      - dvclive/plots:
+          cache: false
+
+  plot_summary:
+    cmd: python plot_summary.py
+    deps:
+      - plot_summary.py
+      - results.csv # This stage depends on the exported results
+    plots:
+      - summary_plot.png:
+          cache: false

@@ -1,0 +1,68 @@
+name: "Train & Evaluate Data Poisoning Impact"
+on: [push]
+
+jobs:
+  run-experiments:
+    name: Run Poisoning Experiments
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Cache Pip Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Set up DVC & CML
+        uses: iterative/setup-dvc@v1
+      - uses: iterative/setup-cml@v1
+
+      - name: Run All DVC Experiments
+        run: dvc exp run --run-all --set-param train.poison_rate=[0.0,0.05,0.10,0.25,0.50]
+
+      - name: Export Experiment Results to CSV
+        run: dvc exp show --csv > results.csv
+
+      - name: Generate Summary Plot
+        run: dvc repro plot_summary
+
+      - name: Create Beautiful CML Report
+        env:
+          repo_token: ${{ secrets.TOKEN }}
+        run: |
+          ACCURACY_FMT=$(cat baseline_acc.txt)
+          echo "## 🧪 Data Poisoning Analysis" > report.md
+          echo "![Baseline Accuracy](https://img.shields.io/badge/Baseline%20Accuracy-${ACCURACY_FMT}-blue)" >> report.md
+          echo "### Summary: Best Model Performance vs. Poison Rate" >> report.md
+          cml publish summary_plot.png --md >> report.md
+          echo "### Detailed Metrics Across All Experiments" >> report.md
+          dvc exp show --markdown >> report.md
+          echo "---" >> report.md
+          echo "**🚀 Workflow triggered by:** ${{ github.actor }}" >> report.md
+          cml comment create report.md
+
+      - name: Upload All Results as Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-experiment-outputs
+          path: |
+            summary_plot.png
+            models/
+            plots/
+            reports/
+            dvclive/

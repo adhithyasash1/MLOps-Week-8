@@ -1,0 +1,13 @@
+# Python Virtual Environment
+.venv/
+__pycache__/
+
+# DVC local cache and temp files
+.dvc/cache
+.dvc/tmp
+
+# Generated files (should be created by the pipeline)
+results.csv
+results.png
+model.pkl
+dvclive/

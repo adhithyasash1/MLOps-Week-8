@@ -58,9 +58,9 @@ jobs:
           echo "------------------------------"
 
       - name: Generate Summary Plot
-        run: dvc repro plot_summary
+        run: python plot_summary.py
 
-      - name: Create Beautiful CML Report
+      - name: Create CML Report
         env:
           repo_token: ${{ secrets.TOKEN }}
         run: |

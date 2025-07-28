@@ -65,23 +65,71 @@ jobs:
       - name: Generate Summary Plot
         run: python plot_summary.py
 
+      - name: Create Formatted Metrics Table
+        run: |
+          echo "Creating formatted metrics table..."
+          python -c "
+          import pandas as pd
+          import sys
+          
+          try:
+              df = pd.read_csv('results.csv')
+              
+              # Handle duplicate columns
+              cols = pd.Series(df.columns)
+              for dup in cols[cols.duplicated()].unique():
+                  cols[cols[cols == dup].index.values.tolist()] = [dup + '_' + str(i) if i != 0 else dup for i in range(sum(cols == dup))]
+              df.columns = cols
+              
+              # Filter for actual experiments (with names)
+              df_filtered = df[df['Experiment'].notna() & (df['Experiment'] != '')]
+              
+              # Convert to numeric
+              df_filtered['poison_rate'] = pd.to_numeric(df_filtered['poison_rate'], errors='coerce')
+              df_filtered['best_model_accuracy'] = pd.to_numeric(df_filtered['best_model_accuracy'], errors='coerce')
+              df_filtered['best_model_loss'] = pd.to_numeric(df_filtered['best_model_loss'], errors='coerce')
+              df_filtered['best_model_f1'] = pd.to_numeric(df_filtered['best_model_f1'], errors='coerce')
+              
+              # Sort by poison rate
+              df_filtered = df_filtered.sort_values('poison_rate')
+              
+              # Create formatted table
+              with open('metrics_table.md', 'w') as f:
+                  f.write('| Poison Rate | Accuracy | Loss | F1 Score | Experiment |\n')
+                  f.write('|------------|----------|------|----------|------------|\n')
+                  for _, row in df_filtered.iterrows():
+                      f.write(f'| {row[\"poison_rate\"]:.0%} | {row[\"best_model_accuracy\"]:.4f} | {row[\"best_model_loss\"]:.4f} | {row[\"best_model_f1\"]:.4f} | {row[\"Experiment\"]} |\n')
+              
+              print('Formatted metrics table created successfully')
+          except Exception as e:
+              print(f'Error creating metrics table: {e}')
+              sys.exit(1)
+          "
+
       - name: Create CML Report
         env:
           repo_token: ${{ secrets.TOKEN }}
         run: |
           ACCURACY_FMT=$(cat baseline_acc.txt)
-          echo "## 🧪 Data Poisoning Analysis" > report.md
+          echo "## 🧪 Data Poisoning Analysis Results" > report.md
+          echo "" >> report.md
           echo "![Baseline Accuracy](https://img.shields.io/badge/Baseline%20Accuracy-${ACCURACY_FMT}-blue)" >> report.md
-          echo '<table><tr>' >> report.md
-          echo '<td><h3>📊 Performance vs. Poison Rate</h3>' >> report.md
+          echo "" >> report.md
+          echo "### 📊 Performance vs. Poison Rate" >> report.md
+          echo "" >> report.md
           cml publish summary_plot.png --md >> report.md
-          echo '</td>' >> report.md
-          echo '<td><h3>📈 Experiment Metrics</h3>' >> report.md
-          dvc exp show >> report.md
-          echo '</td>' >> report.md
-          echo '</tr></table>' >> report.md
+          echo "" >> report.md
+          echo "### 📈 Detailed Experiment Metrics" >> report.md
+          echo "" >> report.md
+          cat metrics_table.md >> report.md
+          echo "" >> report.md
+          echo "### 🔍 Key Findings" >> report.md
+          echo "- **Baseline Performance**: Model achieves ${ACCURACY_FMT} accuracy with clean data" >> report.md
+          echo "- **Impact of Poisoning**: Performance degrades as poison rate increases" >> report.md
+          echo "- **Robustness Assessment**: Evaluate model resilience to data corruption" >> report.md
+          echo "" >> report.md
           echo "---" >> report.md
-          echo "**🚀 Workflow triggered by:** ${{ github.actor }}" >> report.md
+          echo "**🚀 Workflow triggered by:** ${{ github.actor }} | **📅 Run Date:** $(date +'%Y-%m-%d %H:%M:%S UTC')" >> report.md
           cml comment create report.md
 
       - name: Upload Results as Artifacts
@@ -91,3 +139,4 @@ jobs:
           path: |
             summary_plot.png
             results.csv
+            metrics_table.md

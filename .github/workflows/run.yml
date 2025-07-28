@@ -37,6 +37,11 @@ jobs:
         uses: iterative/setup-dvc@v1
       - uses: iterative/setup-cml@v1
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "adhithyasash1"
+          git config --global user.email "sashiradhithya@gmail.com"
+
       - name: Pull DVC Data
         run: dvc pull
 

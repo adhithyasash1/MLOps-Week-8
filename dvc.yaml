@@ -6,13 +6,18 @@ stages:
       - data/iris.csv
     params:
       - train.poison_rate
-    outs:
-      - models/
-      - plots/
-      - reports/
     metrics:
       - dvclive/metrics.json:
           cache: false
     plots:
       - dvclive/plots:
+          cache: false
+
+  plot_summary:
+    cmd: python plot_summary.py
+    deps:
+      - plot_summary.py
+      - results.csv
+    plots:
+      - summary_plot.png:
           cache: false

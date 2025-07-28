@@ -63,7 +63,7 @@ jobs:
           echo "### Summary: Best Model Performance vs. Poison Rate" >> report.md
           cml publish summary_plot.png --md >> report.md
           echo "### Detailed Metrics Across All Experiments" >> report.md
-          dvc exp show --markdown >> report.md
+          dvc exp show >> report.md
           echo "---" >> report.md
           echo "**🚀 Workflow triggered by:** ${{ github.actor }}" >> report.md
           cml comment create report.md

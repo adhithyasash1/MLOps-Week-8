@@ -38,6 +38,18 @@ jobs:
       - name: Export Experiment Results to CSV
         run: dvc exp show --csv > results.csv
 
+      - name: Debug Exported CSV
+        run: |
+          echo "--- Content of results.csv ---"
+          cat results.csv
+          echo "------------------------------"
+
+      - name: Generate Summary Plot
+        run: dvc repro plot_summary
+
+      - name: Export Experiment Results to CSV
+        run: dvc exp show --csv > results.csv
+
       - name: Generate Summary Plot
         run: dvc repro plot_summary
 

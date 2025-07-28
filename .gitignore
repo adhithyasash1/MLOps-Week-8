@@ -6,8 +6,10 @@ __pycache__/
 .dvc/cache
 .dvc/tmp
 
-# Generated files (should be created by the pipeline)
+# Generated files
 results.csv
 results.png
 model.pkl
-dvclive/
+/models
+/plots
+/reports

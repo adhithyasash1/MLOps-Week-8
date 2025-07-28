@@ -1,0 +1,41 @@
+schema: '2.0'
+stages:
+  train:
+    cmd: python train.py --poison-rate 0.5
+    deps:
+    - path: data/iris.csv
+      hash: md5
+      md5: 9c22f7cf3714d0c194f5f43a6276ca9d
+      size: 3861
+    - path: train.py
+      hash: md5
+      md5: 94a5986a5b48e6060918ddd93961fdbe
+      size: 8484
+    params:
+      params.yaml:
+        train.poison_rate: 0.5
+    outs:
+    - path: dvclive/metrics.json
+      hash: md5
+      md5: 92da5cd24ed8faa00fc3daaedad5782d
+      size: 119
+    - path: dvclive/plots
+      hash: md5
+      md5: 4217976811a2054d658d39b28f695815.dir
+      size: 113
+      nfiles: 3
+    - path: models/
+      hash: md5
+      md5: 821a83937bd31ecae51888af4c00c358.dir
+      size: 722586
+      nfiles: 4
+    - path: plots/
+      hash: md5
+      md5: 14921b4f8afae6090e3d422bf94d304b.dir
+      size: 187027
+      nfiles: 1
+    - path: reports/
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0

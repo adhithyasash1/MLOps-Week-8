@@ -1,2 +1,2 @@
 train:
-  poison_rate: 0.0
+  poison_rate: 0.5

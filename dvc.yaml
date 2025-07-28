@@ -16,12 +16,3 @@ stages:
     plots:
       - dvclive/plots:
           cache: false
-
-  plot_summary:
-    cmd: python plot_summary.py
-    deps:
-      - plot_summary.py
-      - results.csv # This stage depends on the exported results
-    plots:
-      - summary_plot.png:
-          cache: false

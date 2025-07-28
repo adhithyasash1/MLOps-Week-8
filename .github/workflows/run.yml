@@ -14,6 +14,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -31,6 +36,9 @@ jobs:
       - name: Set up DVC & CML
         uses: iterative/setup-dvc@v1
       - uses: iterative/setup-cml@v1
+
+      - name: Pull DVC Data
+        run: dvc pull
 
       - name: Run All DVC Experiments with a Loop
         run: |

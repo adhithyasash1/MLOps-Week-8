@@ -17,25 +17,26 @@ stages:
     outs:
     - path: dvclive/metrics.json
       hash: md5
-      md5: 92da5cd24ed8faa00fc3daaedad5782d
-      size: 119
+      md5: 5d724a16a9a0d4c3628ba5f27adf0d41
+      size: 133
     - path: dvclive/plots
       hash: md5
-      md5: 4217976811a2054d658d39b28f695815.dir
-      size: 113
+      md5: 82969b164caab5a92d6dd475d16e0d88.dir
+      size: 127
       nfiles: 3
-    - path: models/
+  plot_summary:
+    cmd: python plot_summary.py
+    deps:
+    - path: plot_summary.py
       hash: md5
-      md5: 821a83937bd31ecae51888af4c00c358.dir
-      size: 722586
-      nfiles: 4
-    - path: plots/
+      md5: 417f2f4467b71517f0255af9c731bc44
+      size: 2467
+    - path: results.csv
       hash: md5
-      md5: 14921b4f8afae6090e3d422bf94d304b.dir
-      size: 187027
-      nfiles: 1
-    - path: reports/
+      md5: 13a30e80d30a5a8ecfd18f336a92c314
+      size: 1251
+    outs:
+    - path: summary_plot.png
       hash: md5
-      md5: d751713988987e9331980363e24189ce.dir
-      size: 0
-      nfiles: 0
+      md5: e2c24218678a3ff86b24d30d54b298d5
+      size: 72665

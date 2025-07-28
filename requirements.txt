@@ -6,3 +6,4 @@ dvclive
 seaborn
 pyyaml 
 joblib
+dvc-gs

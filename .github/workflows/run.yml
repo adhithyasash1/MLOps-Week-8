@@ -32,23 +32,22 @@ jobs:
         uses: iterative/setup-dvc@v1
       - uses: iterative/setup-cml@v1
 
-      - name: Run All DVC Experiments
-        run: dvc exp run --run-all --set-param train.poison_rate=[0.0,0.05,0.10,0.25,0.50]
+      - name: Run All DVC Experiments with a Loop
+        run: |
+          for rate in 0.0 0.05 0.10 0.25 0.50
+          do
+            echo "--- Running experiment for poison rate: $rate ---"
+            dvc exp run --set-param train.poison_rate=$rate
+          done
 
       - name: Export Experiment Results to CSV
         run: dvc exp show --csv > results.csv
 
-      - name: Debug Exported CSV
+      - name: Debug CSV Content
         run: |
           echo "--- Content of results.csv ---"
           cat results.csv
           echo "------------------------------"
-
-      - name: Generate Summary Plot
-        run: dvc repro plot_summary
-
-      - name: Export Experiment Results to CSV
-        run: dvc exp show --csv > results.csv
 
       - name: Generate Summary Plot
         run: dvc repro plot_summary
@@ -60,21 +59,22 @@ jobs:
           ACCURACY_FMT=$(cat baseline_acc.txt)
           echo "## 🧪 Data Poisoning Analysis" > report.md
           echo "![Baseline Accuracy](https://img.shields.io/badge/Baseline%20Accuracy-${ACCURACY_FMT}-blue)" >> report.md
-          echo "### Summary: Best Model Performance vs. Poison Rate" >> report.md
+          echo '<table><tr>' >> report.md
+          echo '<td><h3>📊 Performance vs. Poison Rate</h3>' >> report.md
           cml publish summary_plot.png --md >> report.md
-          echo "### Detailed Metrics Across All Experiments" >> report.md
-          dvc exp show >> report.md
+          echo '</td>' >> report.md
+          echo '<td><h3>📈 Experiment Metrics</h3>' >> report.md
+          dvc exp show --markdown >> report.md
+          echo '</td>' >> report.md
+          echo '</tr></table>' >> report.md
           echo "---" >> report.md
           echo "**🚀 Workflow triggered by:** ${{ github.actor }}" >> report.md
           cml comment create report.md
 
-      - name: Upload All Results as Artifacts
+      - name: Upload Results as Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: all-experiment-outputs
+          name: experiment-results
           path: |
             summary_plot.png
-            models/
-            plots/
-            reports/
-            dvclive/
+            results.csv

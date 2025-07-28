@@ -9,19 +9,58 @@ def main():
         print("Error: results.csv not found.")
         return
 
-    # Use the exact, simpler column names from the DVC output
-    df.rename(columns={
-        "train.poison_rate": "poison_rate",
-        "best_model_accuracy": "accuracy",
-        "best_model_loss": "loss"
-    }, inplace=True)
+    # Debug: Print column names to understand the structure
+    print("Available columns:", df.columns.tolist())
+    print("DataFrame shape:", df.shape)
+    
+    # Handle duplicate column names by creating unique column names
+    cols = pd.Series(df.columns)
+    for dup in cols[cols.duplicated()].unique():
+        cols[cols[cols == dup].index.values.tolist()] = [dup + '_' + str(i) if i != 0 else dup for i in range(sum(cols == dup))]
+    df.columns = cols
+    
+    print("Columns after deduplication:", df.columns.tolist())
+    
+    # Use the columns that actually exist in the CSV
+    # Based on the CSV structure, we'll use the standalone columns
+    accuracy_col = 'best_model_accuracy'
+    loss_col = 'best_model_loss' 
+    f1_col = 'best_model_f1'
+    poison_rate_col = 'poison_rate'  # Use the standalone poison_rate column
+    
+    # Rename for consistency
+    rename_dict = {}
+    if accuracy_col in df.columns:
+        rename_dict[accuracy_col] = "accuracy"
+    if loss_col in df.columns:
+        rename_dict[loss_col] = "loss"
+    if f1_col in df.columns:
+        rename_dict[f1_col] = "f1"
+    
+    df.rename(columns=rename_dict, inplace=True)
 
-    df['accuracy'] = pd.to_numeric(df['accuracy'], errors='coerce')
-    df['loss'] = pd.to_numeric(df['loss'], errors='coerce')
+    # Convert to numeric, handling any conversion errors
+    for col in ['accuracy', 'loss', 'f1']:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    # Handle poison_rate column
+    if poison_rate_col in df.columns:
+        df['poison_rate_clean'] = pd.to_numeric(df[poison_rate_col], errors='coerce')
+    else:
+        print(f"Error: {poison_rate_col} column not found")
+        return
 
     # Filter out rows that are not part of an experiment or have no metrics
-    df = df[df['Experiment'].notna()].dropna(subset=['accuracy', 'loss'])
-    df = df.sort_values(by="poison_rate").reset_index(drop=True)
+    # Keep only rows with experiment names (not empty)
+    df = df[df['Experiment'].notna() & (df['Experiment'] != '')]
+    df = df.dropna(subset=['accuracy', 'loss', 'poison_rate_clean'])
+    
+    # Use the clean poison_rate column for sorting
+    df = df.sort_values(by="poison_rate_clean").reset_index(drop=True)
+    
+    # Rename for plotting
+    df['poison_rate'] = df['poison_rate_clean']
 
     # Save baseline accuracy for the report badge
     baseline_df = df[df['poison_rate'] == 0.0]

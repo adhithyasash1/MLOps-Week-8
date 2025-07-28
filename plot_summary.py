@@ -3,23 +3,17 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 def main():
-    try:
-        df = pd.read_csv("results.csv")
-    except FileNotFoundError:
-        print("Error: results.csv not found.")
-        return
+    df = pd.read_csv("results.csv")
 
-    # Use the exact column names from the DVC output
+    # Use the exact, unambiguous column names from the DVC output
     df.rename(columns={
-        "train.poison_rate": "poison_rate",
-        "best_model_accuracy": "accuracy",
-        "best_model_loss": "loss"
+        "param:params.yaml:train.poison_rate": "poison_rate",
+        "metric:dvclive/metrics.json:best_model_accuracy": "accuracy",
+        "metric:dvclive/metrics.json:best_model_loss": "loss"
     }, inplace=True)
     
     df['accuracy'] = pd.to_numeric(df['accuracy'], errors='coerce')
     df['loss'] = pd.to_numeric(df['loss'], errors='coerce')
-    
-    # Filter out rows that are not part of an experiment or have no metrics
     df = df[df['Experiment'].notna()].dropna(subset=['accuracy', 'loss'])
     df = df.sort_values(by="poison_rate").reset_index(drop=True)
 
@@ -33,7 +27,7 @@ def main():
         with open("baseline_acc.txt", "w") as f:
             f.write("N/A")
 
-    # --- Create the Plot ---
+    # --- Create the Summary Plot ---
     sns.set_theme(style="whitegrid")
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
     fig.suptitle('Best Model Performance vs. Data Poisoning Rate', fontsize=16)

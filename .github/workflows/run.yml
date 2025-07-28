@@ -77,7 +77,7 @@ jobs:
           cml publish summary_plot.png --md >> report.md
           echo '</td>' >> report.md
           echo '<td><h3>📈 Experiment Metrics</h3>' >> report.md
-          dvc exp show --markdown >> report.md
+          dvc exp show >> report.md
           echo '</td>' >> report.md
           echo '</tr></table>' >> report.md
           echo "---" >> report.md
